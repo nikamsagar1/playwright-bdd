@@ -1,0 +1,20 @@
+{
+  "browser": "chromium",
+  "headless": false,
+
+  "slow_mo": 0,
+
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+
+  "retries": 1,
+  "parallel_workers": 4,
+
+  "trace": "on-failure",
+  "video": "off",
+
+  "expect_timeout": 5000,
+  "artifacts_dir": "test-results"
+}

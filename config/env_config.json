@@ -1,0 +1,29 @@
+{
+  "environments": {
+    "qa": {
+      "base_url": "https://opensource-demo.orangehrmlive.com/web/index.php/auth/login",
+      "credentials": {
+        "username": "Admin",
+        "password": "admin123"
+      },
+      "timeouts": {
+        "page_load": 30000,
+        "element": 10000
+      }
+    },
+
+    "uat": {
+      "base_url": "https://testautomationpractice.blogspot.com/",
+      "credentials": {
+        "username": "Admin",
+        "password": "admin123"
+      },
+      "timeouts": {
+        "page_load": 30000,
+        "element": 10000
+      }
+    }
+  },
+
+  "default_env": "qa"
+}

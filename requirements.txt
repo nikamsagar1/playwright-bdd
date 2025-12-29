@@ -1,0 +1,25 @@
+# Core test runner used to discover, execute, and manage test cases
+pytest
+
+# Enables parallel test execution across multiple CPU cores
+# Used to speed up large regression suites
+pytest-xdist
+
+# Provides BDD (Gherkin) support for pytest
+# Allows writing feature files with Given/When/Then steps
+pytest-bdd
+
+# Playwright library for browser automation
+# Sync API is used for better readability and easier maintenance
+playwright
+
+# Integrates Allure reporting with pytest
+# Used for rich, Extent-style test execution reports
+allure-pytest
+
+# Generates simple standalone HTML reports as a backup reporting option
+pytest-html
+
+# Loads environment variables from .env files
+# Helps manage environment-specific configuration in CI/CD pipelines
+python-dotenv

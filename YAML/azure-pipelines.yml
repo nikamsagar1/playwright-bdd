@@ -1,0 +1,187 @@
+# Azure DevOps Pipeline for BDD Tests
+# This file runs automated tests and publishes results
+
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - '*'  # Run on any file change
+
+pr:
+  branches:
+    include:
+    - main
+
+# Run on schedule (daily at 2 AM)
+schedules:
+- cron: "0 2 * * *"
+  displayName: Daily test run
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: 'windows-latest'  # Use Windows image (or 'ubuntu-latest', 'macos-latest')
+
+variables:
+  pythonVersion: '3.11'
+  environment: 'qa'  # Can be: qa, uat, prod
+
+stages:
+
+# ============================================
+# STAGE 1: Setup and Install Dependencies
+# ============================================
+- stage: Setup
+  displayName: 'Setup Environment'
+  
+  jobs:
+  - job: InstallDependencies
+    displayName: 'Install Dependencies'
+    
+    steps:
+    # Step 1: Show Python version
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+      displayName: 'Use Python $(pythonVersion)'
+    
+    # Step 2: Upgrade pip
+    - script: |
+        python -m pip install --upgrade pip
+      displayName: 'Upgrade pip'
+    
+    # Step 3: Install Python packages
+    - script: |
+        pip install -r requirements.txt
+      displayName: 'Install Python dependencies'
+    
+    # Step 4: Install Playwright browsers
+    - script: |
+        playwright install
+      displayName: 'Install Playwright browsers'
+    
+    # Step 5: Cache dependencies for faster builds
+    - task: CacheBeta@1
+      inputs:
+        key: 'pip | "$(Agent.OS)" | requirements.txt'
+        restoreKeys: |
+          pip | "$(Agent.OS)"
+          pip
+        path: $(PIP_CACHE_DIR)
+      displayName: 'Cache pip packages'
+
+# ============================================
+# STAGE 2: Run Tests
+# ============================================
+- stage: Test
+  displayName: 'Run BDD Tests'
+  dependsOn: Setup
+  condition: succeeded()
+  
+  jobs:
+  - job: RunTests
+    displayName: 'Run Tests - $(environment) Environment'
+    
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+      displayName: 'Use Python $(pythonVersion)'
+    
+    # Install dependencies
+    - script: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        playwright install
+      displayName: 'Install dependencies'
+    
+    # Run tests
+    - script: |
+        pytest tests/test_runner.py --env=$(environment) -v --html=$(Build.ArtifactStagingDirectory)/report.html --self-contained-html --junitxml=$(Build.ArtifactStagingDirectory)/junit.xml
+      displayName: 'Execute BDD Tests'
+      continueOnError: true  # Don't fail if tests fail (we want to see results)
+    
+    # Publish test results
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '$(Build.ArtifactStagingDirectory)/junit.xml'
+        failTaskOnFailedTests: false
+      displayName: 'Publish Test Results'
+      condition: always()
+    
+    # Copy screenshots to artifacts
+    - task: CopyFiles@2
+      inputs:
+        contents: 'screenshots/**'
+        targetFolder: $(Build.ArtifactStagingDirectory)
+      displayName: 'Copy Screenshots'
+      condition: always()
+    
+    # Publish HTML report
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: $(Build.ArtifactStagingDirectory)
+        artifactName: test-results-$(environment)
+      displayName: 'Publish Test Artifacts'
+      condition: always()
+
+# ============================================
+# STAGE 3: Publish Results
+# ============================================
+- stage: PublishResults
+  displayName: 'Publish Results'
+  dependsOn: Test
+  condition: always()
+  
+  jobs:
+  - job: PublishReports
+    displayName: 'Create Summary Report'
+    
+    steps:
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: reports
+        artifactName: final-report
+      displayName: 'Publish Final Report'
+      condition: always()
+    
+    # Send notification (optional)
+    - script: |
+        echo "Test execution completed. Check artifacts for reports and screenshots."
+      displayName: 'Print Summary'
+
+# ============================================
+# ALTERNATIVE: Simple Pipeline (Recommended for starters)
+# ============================================
+# Uncomment this and comment out everything above for a simpler version
+
+# trigger:
+#   - main
+# 
+# pool:
+#   vmImage: 'windows-latest'
+# 
+# steps:
+# - task: UsePythonVersion@0
+#   inputs:
+#     versionSpec: '3.11'
+# 
+# - script: |
+#     pip install -r requirements.txt
+#     playwright install
+#   displayName: 'Install dependencies'
+# 
+# - script: |
+#     pytest tests/test_runner.py --env=qa -v
+#   displayName: 'Run tests'
+# 
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     pathToPublish: reports
+#     artifactName: test-report
+#   condition: always()
