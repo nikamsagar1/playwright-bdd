@@ -20,7 +20,7 @@ jobs:
     steps:
     # Step 1: Get the code from GitHub
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     # Step 2: Setup Python
     - name: Set up Python ${{ matrix.python-version }}
@@ -42,55 +42,27 @@ jobs:
     # Step 5: Run tests in QA environment (headless)
     - name: Run BDD Tests - QA Environment
       run: |
-        pytest tests/test_runner.py --env=qa -v --html=reports/report.html --self-contained-html
+        python -m pytest tests/test_runner.py --env=qa -v --html=reports/report.html --self-contained-html
     
     # Step 6: Upload HTML report as artifact
     - name: Upload Test Report
       if: always()  # Upload even if tests fail
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-report-python${{ matrix.python-version }}
         path: reports/report.html
+        retention-days: 30
     
     # Step 7: Upload screenshots of failed tests
     - name: Upload Screenshots
       if: failure()  # Upload only if tests failed
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: screenshots-python${{ matrix.python-version }}
         path: screenshots/
+        retention-days: 30
     
-    # Step 8: Publish test results
-    - name: Publish Test Results
+    # Step 8: Test Summary
+    - name: Test Summary
       if: always()
-      uses: EnricoMi/publish-unit-test-result-action/composite@v2
-      with:
-        files: reports/report.html
-        check_name: Test Results - Python ${{ matrix.python-version }}
-
-# ============================================
-# ALTERNATIVE: Simple Test Execution
-# ============================================
-# Uncomment this section if you want a simpler workflow
-
-# jobs:
-#   simple-test:
-#     runs-on: ubuntu-latest
-#     
-#     steps:
-#     - uses: actions/checkout@v3
-#     
-#     - uses: actions/setup-python@v4
-#       with:
-#         python-version: '3.11'
-#     
-#     - run: |
-#         pip install -r requirements.txt
-#         playwright install
-#         pytest tests/test_runner.py --env=qa -v
-#     
-#     - uses: actions/upload-artifact@v3
-#       if: always()
-#       with:
-#         name: test-results
-#         path: reports/
+      run: echo "Tests completed for Python ${{ matrix.python-version }}"
