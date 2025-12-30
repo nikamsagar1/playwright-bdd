@@ -6,11 +6,6 @@ from pages.dashboard_page import DashboardPage
 from pages.users_page import UsersPage
 from pages.add_user_page import AddUserPage
 
-# -----------------------------
-# Load feature file
-# -----------------------------
-scenarios('../features/add_user.feature')
-
 
 # -----------------------------
 # Given steps
@@ -59,12 +54,7 @@ def add_new_user(app_context):
 
     # Add user using AddUserPage
     add_user_page = app_context.get_page(AddUserPage)
-    add_user_page.add_user(
-        employee_name,
-        username,
-        password,
-        confirm_password
-    )
+    add_user_page.add_user(employee_name, username, password, confirm_password)
 
 
 # -----------------------------
