@@ -16,12 +16,12 @@ pr:
     - main
 
 # Run on schedule (daily at 2 AM)
-schedules:
-- cron: "0 2 * * *"
-  displayName: Daily test run
-  branches:
-    include:
-    - main
+#schedules:
+#- cron: "0 2 * * *"
+ # displayName: Daily test run
+ # branches:
+  #  include:
+   # - main
 
 pool:
   vmImage: 'windows-latest'  # Use Windows image (or 'ubuntu-latest', 'macos-latest')
